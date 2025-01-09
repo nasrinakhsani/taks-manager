@@ -1,8 +1,18 @@
 <template>
-  <div class="login-container">
-    <div class="login-form">
-      <h2 class="title">Login</h2>
-      <form @submit.prevent="login">
+  <div class="signup-container">
+    <div class="signup-form">
+      <h2 class="title">Sign Up</h2>
+      <form @submit.prevent="submitForm">
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input
+            type="text"
+            v-model="name"
+            id="name"
+            required
+            placeholder="Enter your name"
+          />
+        </div>
         <div class="form-group">
           <label for="email">Email</label>
           <input
@@ -23,9 +33,20 @@
             placeholder="Enter your password"
           />
         </div>
-        <button type="submit" class="submit-btn">Login</button>
-        <p class="signup-link">
-          Don't have an account? <a href="/signup">Sign Up</a>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input
+            type="password"
+            v-model="confirmPassword"
+            id="confirmPassword"
+            required
+            placeholder="Confirm your password"
+          />
+        </div>
+        <button type="submit" class="submit-btn">Sign Up</button>
+        <p class="login-link">
+          Already have an account? <a href="/login">Login</a>
         </p>
       </form>
     </div>
@@ -36,24 +57,42 @@
 import axios from "axios";
 
 export default {
-  name: "UserLogin",
+  name: "UserSignup",
   data() {
     return {
+      name: "",
       email: "",
       password: "",
+      confirmPassword: "",
     };
   },
+  computed: {
+    passwordsMatch() {
+      return this.password === this.confirmPassword;
+    },
+  },
   methods: {
-    async login() {
-      try {
-        const response = await axios.post("http://localhost:8000/login", {
-          email: this.email,
-          password: this.password,
-        });
-        localStorage.setItem("token", response.data.access_token);
-        this.$router.push("/admin-dashboard");
-      } catch (error) {
-        alert("Login failed! Please check your credentials.");
+    async submitForm() {
+      if (this.passwordsMatch) {
+        try {
+          const response = await axios.post("http://localhost:8000/signup", {
+            name: this.name,
+            email: this.email,
+            password: this.password,
+          });
+
+          if (response.data.success) {
+            alert("Signup successful! Please login.");
+            this.$router.push("/login");
+          } else {
+            alert("Signup failed! Please check your inputs.");
+          }
+        } catch (error) {
+          alert("Signup failed! Please check your inputs.");
+        }
+      } else {
+        alert("Passwords do not match!");
+        this.confirmPassword = "";
       }
     },
   },
@@ -61,8 +100,8 @@ export default {
 </script>
 
 <style scoped>
-/* Styling for the login page */
-.login-container {
+/* Styling for the signup page */
+.signup-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -72,14 +111,15 @@ export default {
   background: linear-gradient(135deg, #87ceeb, #4682b4); /* Gradien biru */
 }
 
-.login-form {
-  background: rgba(255, 255, 255, 0.9);
+.signup-form {
+  background: rgba(255, 255, 255, 0.9); /* Transparansi ringan */
   padding: 40px;
   border-radius: 12px;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
   width: 100%;
   max-width: 380px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px); /* Blur effect */
+  position: relative;
   z-index: 1;
 }
 
@@ -118,7 +158,7 @@ export default {
 .form-group input:focus {
   border-color: #4682b4; /* Biru tua */
   outline: none;
-  box-shadow: 0 0 8px rgba(70, 130, 180, 0.6);
+  box-shadow: 0 0 8px rgba(70, 130, 180, 0.6); /* Biru tua */
 }
 
 .submit-btn {
@@ -135,7 +175,11 @@ export default {
 }
 
 .submit-btn:hover {
-  background: linear-gradient(135deg, #1e90ff, #4682b4);
+  background: linear-gradient(
+    135deg,
+    #1e90ff,
+    #4682b4
+  ); /* Gradien lebih terang */
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
@@ -144,20 +188,20 @@ export default {
   transform: translateY(2px);
 }
 
-.signup-link {
+.login-link {
   text-align: center;
   margin-top: 20px;
 }
 
-.signup-link a {
+.login-link a {
   color: #4682b4; /* Biru tua */
   text-decoration: none;
   font-weight: 600;
   transition: color 0.3s ease;
 }
 
-.signup-link a:hover {
-  color: #1e90ff; /* Biru lebih terang */
+.login-link a:hover {
+  color: #1e90ff; /* Biru terang */
   text-decoration: underline;
 }
 </style>
