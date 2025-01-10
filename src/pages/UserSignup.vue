@@ -75,18 +75,15 @@ export default {
     async submitForm() {
       if (this.passwordsMatch) {
         try {
-          const response = await axios.post("http://localhost:8000/signup", {
+          await axios.post("http://localhost:3000/register", {
             name: this.name,
             email: this.email,
             password: this.password,
           });
 
-          if (response.data.success) {
-            alert("Signup successful! Please login.");
-            this.$router.push("/login");
-          } else {
-            alert("Signup failed! Please check your inputs.");
-          }
+          alert("Signup successful! Please login.");
+          this.$router.push("/login");
+
         } catch (error) {
           alert("Signup failed! Please check your inputs.");
         }
@@ -108,16 +105,16 @@ export default {
   height: 100vh;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   overflow: hidden;
-  background: linear-gradient(135deg, #87ceeb, #4682b4); /* Gradien biru */
+  background: linear-gradient(135deg, #87ceeb, #4682b4); /* Exact same gradient as login */
 }
 
 .signup-form {
-  background: rgba(255, 255, 255, 0.9); /* Transparansi ringan */
-  padding: 40px;
+  background: rgba(255, 255, 255, 0.9); /* Light transparent background */
+  padding: 30px; /* Reduced padding for smaller form */
   border-radius: 12px;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
   width: 100%;
-  max-width: 380px;
+  max-width: 380px; /* Form size adjustment */
   backdrop-filter: blur(10px); /* Blur effect */
   position: relative;
   z-index: 1;
@@ -125,16 +122,16 @@ export default {
 
 .title {
   text-align: center;
-  font-size: 36px;
+  font-size: 30px; /* Reduced font size */
   color: #333;
-  margin-bottom: 30px;
+  margin-bottom: 20px; /* Reduced bottom margin */
   font-weight: 600;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 15px; /* Reduced bottom margin */
 }
 
 .form-group label {
@@ -147,7 +144,7 @@ export default {
 
 .form-group input {
   width: 100%;
-  padding: 14px;
+  padding: 12px; /* Reduced padding for smaller input fields */
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 16px;
@@ -156,15 +153,15 @@ export default {
 }
 
 .form-group input:focus {
-  border-color: #4682b4; /* Biru tua */
+  border-color: #4682b4; /* Dark blue border */
   outline: none;
-  box-shadow: 0 0 8px rgba(70, 130, 180, 0.6); /* Biru tua */
+  box-shadow: 0 0 8px rgba(70, 130, 180, 0.6); /* Blue shadow */
 }
 
 .submit-btn {
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, #4682b4, #1e90ff); /* Gradien biru */
+  background: linear-gradient(135deg, #4682b4, #1e90ff); /* Blue gradient button */
   color: white;
   border: none;
   border-radius: 8px;
@@ -175,11 +172,7 @@ export default {
 }
 
 .submit-btn:hover {
-  background: linear-gradient(
-    135deg,
-    #1e90ff,
-    #4682b4
-  ); /* Gradien lebih terang */
+  background: linear-gradient(135deg, #1e90ff, #4682b4); /* Lighter blue gradient on hover */
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
@@ -194,14 +187,14 @@ export default {
 }
 
 .login-link a {
-  color: #4682b4; /* Biru tua */
+  color: #4682b4; /* Dark blue for the link */
   text-decoration: none;
   font-weight: 600;
   transition: color 0.3s ease;
 }
 
 .login-link a:hover {
-  color: #1e90ff; /* Biru terang */
+  color: #1e90ff; /* Lighter blue when hovered */
   text-decoration: underline;
 }
 </style>

@@ -46,12 +46,31 @@ export default {
   methods: {
     async login() {
       try {
-        const response = await axios.post("http://localhost:8000/login", {
+        // Menghapus token yang ada di localStorage jika ada
+        localStorage.removeItem("token");
+
+        // Mengirimkan permintaan login ke API
+        const response = await axios.post("http://localhost:3000/login", {
           email: this.email,
           password: this.password,
         });
-        localStorage.setItem("token", response.data.access_token);
-        this.$router.push("/admin-dashboard");
+
+        // Mengecek apakah respons mengandung token
+        if (response.data.token) {
+          // Menyimpan token baru ke localStorage
+          localStorage.setItem("token", response.data.token);
+
+          // Mengecek role pengguna dan melakukan redirect berdasarkan role
+          if (response.data.role === "admin") {
+            this.$router.push("/Admin"); // Redirect ke halaman Admin jika role admin
+          } else if (response.data.role === "user") {
+            this.$router.push("/User"); // Redirect ke halaman User jika role user
+          } else {
+            alert("Unknown role! Please contact the administrator.");
+          }
+        } else {
+          alert("Login failed! Please check your credentials.");
+        }
       } catch (error) {
         alert("Login failed! Please check your credentials.");
       }
@@ -69,7 +88,7 @@ export default {
   height: 100vh;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   overflow: hidden;
-  background: linear-gradient(135deg, #87ceeb, #4682b4); /* Gradien biru */
+  background: linear-gradient(135deg, #87ceeb, #4682b4); /* Gradasi biru cerah ke biru tua */
 }
 
 .login-form {

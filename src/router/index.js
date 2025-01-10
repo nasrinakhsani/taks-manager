@@ -6,21 +6,103 @@ import UserTasks from "@/pages/UserTasks.vue";
 import UserDashboard from "@/pages/UserDashboard.vue";
 import UserSignup from "@/pages/UserSignup.vue";
 import AddTask from "@/pages/AddTask.vue";
-import UserManagement from "@/pages/UserManagement.vue"; // Update import for UserManagement
+import UserManagement from "@/pages/UserManagement.vue";
+import PageNotFound from "@/pages/PageNotFound.vue"; // Import PageNotFound
+
+// Helper function to get user role from localStorage
+function getUserRole() {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  try {
+    // Decode token if it's a JWT (assuming JWT structure here)
+    const decoded = JSON.parse(atob(token.split(".")[1]));
+    return decoded.role; // Assuming the role is stored in the "role" field
+  } catch (e) {
+    return null;
+  }
+}
 
 const routes = [
   { path: "/", name: "Home", component: HomePage },
   { path: "/login", name: "Login", component: UserLogin },
-  { path: "/admin", name: "AdminDashboard", component: AdminDashboard },
-  { path: "/tasks", name: "UserTasks", component: UserTasks },
-  { path: "/user", name: "UserDashboard", component: UserDashboard },
   { path: "/signup", name: "UserSignup", component: UserSignup },
-  { path: "/add", name: "AddTask", component: AddTask },
+  { path: "/notFound", name: "PageNotFound", component: PageNotFound },
+
+  // Route untuk Admin hanya bisa diakses oleh Admin
+  {
+    path: "/admin",
+    name: "AdminDashboard",
+    component: AdminDashboard,
+    beforeEnter: (to, from, next) => {
+      const role = getUserRole();
+      if (role === "admin") {
+        next();
+      } else {
+        next("/notFound"); // Redirect to /notFound if not admin
+      }
+    },
+  },
+
+  // Route untuk User hanya bisa diakses oleh User
+  {
+    path: "/tasks",
+    name: "UserTasks",
+    component: UserTasks,
+    beforeEnter: (to, from, next) => {
+      const role = getUserRole();
+      if (role === "user") {
+        next();
+      } else {
+        next("/notFound"); // Redirect to /notFound if not user
+      }
+    },
+  },
+
+  // Route untuk User hanya bisa diakses oleh User
+  {
+    path: "/user",
+    name: "UserDashboard",
+    component: UserDashboard,
+    beforeEnter: (to, from, next) => {
+      const role = getUserRole();
+      if (role === "user") {
+        next();
+      } else {
+        next("/notFound"); // Redirect to /notFound if not user
+      }
+    },
+  },
+
+  // Route untuk AddTask hanya bisa diakses oleh User
+  {
+    path: "/add",
+    name: "AddTask",
+    component: AddTask,
+    beforeEnter: (to, from, next) => {
+      const role = getUserRole();
+      if (role === "user") {
+        next();
+      } else {
+        next("/notFound"); // Redirect to /notFound if not user
+      }
+    },
+  },
+
+  // Route untuk UserManagement hanya bisa diakses oleh Admin
   {
     path: "/user-management",
     name: "UserManagement",
     component: UserManagement,
-  }, // Added route for User Management
+    beforeEnter: (to, from, next) => {
+      const role = getUserRole();
+      if (role === "admin") {
+        next();
+      } else {
+        next("/notFound"); // Redirect to /notFound if not admin
+      }
+    },
+  },
 
   // Route for logout
   {
@@ -30,6 +112,13 @@ const routes = [
       localStorage.removeItem("token");
       next("/login");
     },
+  },
+
+  // Catch-all route for Page Not Found (404) when navigating to an unknown route
+  {
+    path: "/:catchAll(.*)",
+    name: "PageNotFound",
+    component: PageNotFound,
   },
 ];
 

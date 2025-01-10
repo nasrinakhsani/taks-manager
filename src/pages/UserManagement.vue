@@ -30,18 +30,16 @@
           <tr>
             <th>Name</th>
             <th>Email</th>
-            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="user in users" :key="user.id">
+          <tr v-for="user in users" :key="user._id">
             <td>{{ user.name }}</td>
             <td>{{ user.email }}</td>
-            <td>{{ user.status }}</td>
             <td>
               <button @click="editUser(user)">Edit</button>
-              <button @click="deleteUser(user.id)">Delete</button>
+              <button @click="deleteUser(user._id)">Delete</button>
             </td>
           </tr>
         </tbody>
@@ -63,11 +61,12 @@
           required
         />
 
-        <label for="editStatus">Status</label>
-        <select id="editStatus" v-model="editUserData.status" required>
-          <option value="Online">Online</option>
-          <option value="Offline">Offline</option>
-        </select>
+        <label for="editPassword">Password</label>
+        <input
+          type="password"
+          id="editPassword"
+          v-model="editUserData.password"
+        />
 
         <button type="submit">Update User</button>
       </form>
@@ -86,12 +85,14 @@ export default {
         name: "",
         email: "",
         status: "Online",
+        password: "", // Add password
       },
       editUserData: {
         id: null,
         name: "",
         email: "",
         status: "Online",
+        password: "", // Add password
       },
       showCreateForm: false,
       showEditForm: false,
@@ -104,7 +105,7 @@ export default {
     // Fetch all users
     async fetchUsers() {
       try {
-        const response = await axios.get("http://localhost:8000/users", {
+        const response = await axios.get("http://localhost:3000/users", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         this.users = response.data;
@@ -112,39 +113,25 @@ export default {
         console.error("Failed to fetch users", error);
       }
     },
-
-    // Create a new user
-    async createUser() {
-      try {
-        const response = await axios.post(
-          "http://localhost:8000/users",
-          this.newUser,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        this.users.push(response.data); // Add the new user to the users list
-        this.newUser = { name: "", email: "", status: "Online" }; // Reset form
-        this.showCreateForm = false; // Hide the form
-      } catch (error) {
-        console.error("Failed to create user", error);
-      }
-    },
-
     // Edit a user
     editUser(user) {
-      this.editUserData = { ...user };
-      this.showEditForm = true;
+      this.editUserData = { ...user }; // Copy user data into editUserData
+      this.showEditForm = true; // Show the edit form
     },
 
     // Update a user
     async updateUser() {
       try {
+        const dataToUpdate = {
+          name: this.editUserData.name,
+          email: this.editUserData.email,
+          status: this.editUserData.status,
+          password: this.editUserData.password || "", // Send password if changed
+        };
+
         const response = await axios.put(
-          `http://localhost:8000/users/${this.editUserData.id}`,
-          this.editUserData,
+          `http://localhost:3000/users/${this.editUserData._id}`,
+          dataToUpdate,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -154,8 +141,9 @@ export default {
         const index = this.users.findIndex(
           (user) => user.id === response.data.id
         );
-        this.users[index] = response.data; // Update the user in the list
-        this.showEditForm = false; // Hide the form
+        this.users[index] = response.data; // Update user data in the list
+        this.showEditForm = false; // Hide the edit form after update
+        this.fetchUsers(); // Refresh user list
       } catch (error) {
         console.error("Failed to update user", error);
       }
@@ -164,10 +152,11 @@ export default {
     // Delete a user
     async deleteUser(userId) {
       try {
-        await axios.delete(`http://localhost:8000/users/${userId}`, {
+        await axios.delete(`http://localhost:3000/users/${userId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         this.users = this.users.filter((user) => user.id !== userId); // Remove the user from the list
+        this.fetchUsers(); // Refresh user list
       } catch (error) {
         console.error("Failed to delete user", error);
       }
@@ -187,21 +176,34 @@ export default {
 </script>
 
 <style scoped>
-/* Styles for the user management section */
+/* User Management Section */
 .user-management {
   padding: 20px;
+  background-color: #f9f9f9;
+  max-width: 1200px;
+  margin: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Heading Styles */
 h1 {
   font-size: 28px;
   margin-bottom: 20px;
+  color: #333;
 }
 
 h2 {
   font-size: 24px;
+  color: #333;
 }
 
+/* Form Styles */
 .form-container {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
 }
 
@@ -221,12 +223,14 @@ button {
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 button:hover {
   background-color: #006699;
 }
 
+/* Table Styles */
 .user-list {
   margin-top: 30px;
 }
@@ -234,13 +238,17 @@ button:hover {
 table {
   width: 100%;
   border-collapse: collapse;
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 table th,
 table td {
-  padding: 10px;
+  padding: 12px;
   text-align: left;
   border-bottom: 1px solid #ddd;
+  font-size: 16px;
 }
 
 table th {
@@ -248,12 +256,33 @@ table th {
   color: white;
 }
 
+table tr:hover {
+  background-color: #f1f1f1;
+}
+
 button {
   padding: 5px 10px;
   margin-right: 10px;
+  background-color: #007bb5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 button:hover {
   background-color: #005f8c;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .user-management {
+    padding: 15px;
+  }
+
+  table th,
+  table td {
+    font-size: 14px;
+  }
 }
 </style>

@@ -37,7 +37,7 @@
 
       <!-- User Status Table -->
       <section class="user-status">
-        <h2>User Status</h2>
+        <h2>User</h2>
         <div class="table-container">
           <table>
             <thead>
@@ -45,64 +45,16 @@
                 <th>User ID</th>
                 <th>Name</th>
                 <th>Email</th>
-                <th>Status</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="user in users" :key="user.id">
-                <td>{{ user.id }}</td>
+              <tr v-for="user in users" :key="user._id">
+                <td>{{ user._id }}</td>
                 <td>{{ user.name }}</td>
                 <td>{{ user.email }}</td>
-                <td :class="{ online: user.isOnline, offline: !user.isOnline }">
-                  {{ user.isOnline ? "Online" : "Offline" }}
-                </td>
               </tr>
             </tbody>
           </table>
-        </div>
-      </section>
-
-      <!-- Tasks Section -->
-      <section class="tasks-container">
-        <div class="task-card" v-for="(task, index) in tasks" :key="index">
-          <h3>{{ task.title }}</h3>
-          <div v-if="isLoading" class="loading">Loading tasks...</div>
-          <div v-else>
-            <div class="task-table-container" v-if="task.items.length > 0">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Task ID</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="taskItem in task.items" :key="taskItem.id">
-                    <td>{{ taskItem.id }}</td>
-                    <td>
-                      <span :class="getStatusClass(taskItem.status)">
-                        {{ taskItem.status }}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        @click="changeTaskStatus(taskItem.id)"
-                        class="action-btn"
-                      >
-                        Change Status
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Message if no tasks -->
-            <div v-else>
-              <p>No tasks available.</p>
-            </div>
-          </div>
         </div>
       </section>
     </div>
@@ -120,34 +72,39 @@ export default {
         { title: "Pending Tasks", value: 0, icon: "fas fa-tasks" },
         { title: "Completed Tasks", value: 0, icon: "fas fa-check-circle" },
       ],
-      tasks: [], // No longer categorizing tasks into multiple groups
+      tasks: [], // Tidak lagi mengelompokkan tugas
       users: [],
       isLoading: false,
     };
   },
   created() {
-    this.fetchStats();
     this.fetchTasks();
     this.fetchUsers();
   },
   methods: {
-    async fetchStats() {
-      try {
-        const response = await axios.get("http://localhost:8000/stats", {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        this.stats = response.data;
-      } catch (error) {
-        console.error("Failed to fetch stats", error);
-      }
-    },
     async fetchTasks() {
       this.isLoading = true;
       try {
-        const response = await axios.get("http://localhost:8000/tasks", {
+        // Mengambil data tugas dengan status 'Pending'
+        const pendingResponse = await axios.get("http://localhost:3000/tasks/belum", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
-        this.tasks = response.data; // Now just a list of tasks without categorizing
+
+        this.tasks = pendingResponse.data;
+
+        // Menghitung jumlah tugas dengan status 'Pending' dan mengupdate statistik
+        const pendingTasksCount = this.tasks.length;
+        this.stats[1].value = pendingTasksCount; // Update "Pending Tasks" di statistik
+
+        // Mengambil data tugas dengan status 'Completed'
+        const completedResponse = await axios.get("http://localhost:3000/tasks/selesai", {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+
+        // Menghitung jumlah tugas dengan status 'Completed' dan mengupdate statistik
+        const completedTasksCount = completedResponse.data.length;
+        this.stats[2].value = completedTasksCount; // Update "Completed Tasks" di statistik
+
       } catch (error) {
         console.error("Failed to fetch tasks", error);
       } finally {
@@ -156,10 +113,12 @@ export default {
     },
     async fetchUsers() {
       try {
-        const response = await axios.get("http://localhost:8000/users", {
+        const response = await axios.get("http://localhost:3000/users", {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         this.users = response.data;
+        // Mengupdate total users
+        this.stats[0].value = this.users.length;
       } catch (error) {
         console.error("Failed to fetch users", error);
       }
@@ -175,7 +134,7 @@ export default {
             },
           }
         );
-        this.fetchTasks(); // Refresh tasks after status change
+        this.fetchTasks(); // Refresh tasks setelah status diubah
       } catch (error) {
         console.error("Failed to change task status", error);
       }
@@ -198,6 +157,7 @@ export default {
     },
   },
 };
+
 </script>
 
 <style scoped>
